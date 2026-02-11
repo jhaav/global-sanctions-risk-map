@@ -57,7 +57,57 @@
     };
     legend.addTo(map);
 
-    // We'll add GeoJSON layer here in next step
+    // Load world GeoJSON
+fetch('world-countries.geojson')
+  .then(response => response.json())
+  .then(geojsonData => {
+    function getColor(tier) {
+      if (tier.includes('High - Comprehensive')) return '#ff0000';
+      if (tier.includes('High - Sectoral')) return '#ff4500';
+      if (tier.includes('Medium')) return '#ffa500';
+      return '#90ee90'; // Low/default
+    }
+
+    function style(feature) {
+      var iso = feature.properties.ISO_A3 || feature.properties.ADM0_A3; // adjust field if needed
+      var data = sanctionsData[iso] || {tier: 'Low'};
+      return {
+        fillColor: getColor(data.tier),
+        weight: 1,
+        opacity: 1,
+        color: 'white',
+        dashArray: '3',
+        fillOpacity: 0.7
+      };
+    }
+
+    function onEachFeature(feature, layer) {
+      var iso = feature.properties.ISO_A3 || feature.properties.ADM0_A3;
+      var props = sanctionsData[iso] || {tier: 'Low', entities: 0, programs: 'None'};
+      props.name = feature.properties.ADMIN || feature.properties.NAME;
+      layer.bindPopup(
+        '<b>' + props.name + '</b><br>' +
+        'Tier: ' + props.tier + '<br>' +
+        'Sanctioned Entities: ' + props.entities + '<br>' +
+        'Main Programs: ' + props.programs
+      );
+      layer.on({
+        mouseover: function(e) { 
+          e.target.setStyle({ weight: 3, color: '#666', fillOpacity: 0.9 });
+          info.update(props);
+        },
+        mouseout: function(e) { 
+          e.target.setStyle(style(e.target.feature));
+          info.update();
+        }
+      });
+    }
+
+    L.geoJson(geojsonData, {
+      style: style,
+      onEachFeature: onEachFeature
+    }).addTo(map);
+  });
   </script>
 </body>
 </html>
