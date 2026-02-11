@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Global Sanctions Risk Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body { margin:0; padding:0; font-family: Arial, Helvetica, sans-serif; background:#111; color:#eee; }
+    #map { height: 100vh; }
+    .info { padding:6px 8px; font:14px Arial; background:rgba(0,0,0,0.8); box-shadow:0 0 15px rgba(255,255,255,0.2); border-radius:5px; }
+    .info h4 { margin:0 0 5px; color:#ddd; }
+    .legend { line-height:18px; color:#ddd; }
+    .legend i { width:18px; height:18px; float:left; margin-right:8px; opacity:0.7; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // Initialize map (centered on world)
+    var map = L.map('map').setView([20, 0], 2);
+
+    // Dark-friendly tiles
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
+
+    // Info control (hover popup)
+    var info = L.control();
+    info.onAdd = function (map) {
+      this._div = L.DomUtil.create('div', 'info');
+      this.update();
+      return this._div;
+    };
+    info.update = function (props) {
+      this._div.innerHTML = '<h4>Sanctions Risk</h4>' +  (props ?
+        '<b>' + props.name + '</b><br />Tier: ' + props.tier + '<br />Entities: ' + props.entities + '<br />Programs: ' + props.programs
+        : 'Hover over a country');
+    };
+    info.addTo(map);
+
+    // Legend
+    var legend = L.control({position: 'bottomright'});
+    legend.onAdd = function (map) {
+      var div = L.DomUtil.create('div', 'info legend'),
+          grades = ['Low', 'Medium', 'High - Sectoral', 'High - Comprehensive'],
+          colors = ['#90ee90', '#ffa500', '#ff4500', '#ff0000'];
+      for (var i = 0; i < grades.length; i++) {
+        div.innerHTML +=
+          '<i style="background:' + colors[i] + '"></i> ' + grades[i] + '<br>';
+      }
+      return div;
+    };
+    legend.addTo(map);
+
+    // We'll add GeoJSON layer here in next step
+  </script>
+</body>
+</html>
